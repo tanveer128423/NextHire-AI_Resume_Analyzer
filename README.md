@@ -2,6 +2,8 @@
 
 An AI-powered web app that analyzes resumes and compares them with job descriptions using NLP to generate match scores, skill insights, and improvement suggestions.
 
+# Deployed link - https://resume-job-match-analyzer-n9tbsvxxt.vercel.app/
+
 ## 🚀 Features
 - AI-based resume analysis  
 - Job match percentage  
