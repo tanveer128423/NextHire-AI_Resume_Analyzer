@@ -1,8 +1,11 @@
 // Frontend integration layer - calls the backend endpoints if available, otherwise returns mocked data.
 
+const API_BASE_URL =
+  import.meta.env.VITE_API_BASE_URL || "http://localhost:4000";
+
 export async function InvokeLLM({ prompt }) {
   try {
-    const res = await fetch("http://localhost:4000/api/invoke-llm", {
+    const res = await fetch(`${API_BASE_URL}/api/invoke-llm`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ prompt }),
@@ -23,7 +26,10 @@ export async function UploadFile({ file }) {
   try {
     const fd = new FormData();
     fd.append("file", file);
-    const res = await fetch("http://localhost:4000/api/upload", { method: "POST", body: fd });
+    const res = await fetch(`${API_BASE_URL}/api/upload`, {
+      method: "POST",
+      body: fd,
+    });
     return await res.json();
   } catch (e) {
     return { file_url: null };
@@ -32,13 +38,16 @@ export async function UploadFile({ file }) {
 
 export async function ExtractDataFromUploadedFile({ file_url, json_schema }) {
   try {
-    const res = await fetch("http://localhost:4000/api/extract", {
+    const res = await fetch(`${API_BASE_URL}/api/extract`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ file_url, json_schema }),
     });
     return await res.json();
   } catch (e) {
-    return { status: "success", output: { content: "Extracted (mock) content from file." } };
+    return {
+      status: "success",
+      output: { content: "Extracted (mock) content from file." },
+    };
   }
 }
