@@ -140,11 +140,14 @@ Provide a comprehensive analysis with:
 `;
 
       // Call backend API
-      const aiResponse = await fetch("http://localhost:4000/api/invoke-llm", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ prompt }),
-      }).then((res) => res.json());
+      const aiResponse = await fetch(
+        "https://nexthire-ai-resume-analyzer-2.onrender.com/api/invoke-llm",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ prompt }),
+        },
+      ).then((res) => res.json());
 
       const analysisDuration = (Date.now() - startTime) / 1000;
 

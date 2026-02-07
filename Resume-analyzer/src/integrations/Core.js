@@ -1,7 +1,8 @@
 // Frontend integration layer - calls the backend endpoints if available, otherwise returns mocked data.
 
 const API_BASE_URL =
-  import.meta.env.VITE_API_BASE_URL || "http://localhost:4000";
+  import.meta.env.VITE_API_BASE_URL ||
+  "https://nexthire-ai-resume-analyzer-2.onrender.com";
 
 export async function InvokeLLM({ prompt }) {
   try {
