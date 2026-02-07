@@ -6,13 +6,13 @@ import History from "./pages/History";
 export default function App() {
   return (
     <Router>
-      <div className="min-h-screen rounded-lg">
+      <div className="min-h-screen rounded-lg bg-slate-900">
         {/* Navbar */}
-        <nav className="bg-slate-800 text-white p-4 flex gap-6">
-          <Link to="/dashboard" className="hover:underline">
+        <nav className="bg-slate-800 text-slate-100 p-4 flex gap-6">
+          <Link to="/dashboard" className="hover:underline text-slate-100">
             Dashboard
           </Link>
-          <Link to="/history" className="hover:underline">
+          <Link to="/history" className="hover:underline text-slate-100">
             History
           </Link>
         </nav>

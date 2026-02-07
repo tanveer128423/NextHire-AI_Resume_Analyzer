@@ -4,9 +4,12 @@ import { Card, CardContent } from "../components/ui/card";
 import { Badge } from "../components/ui/badge";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
-import { motion } from "framer-motion";
-import { format } from "date-fns";
-import { Eye, FileText, Link2, Type, TrendingUp, TrendingDown, Minus, Search } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { formatDistanceToNow } from "date-fns";
+import { 
+  Eye, FileText, Link2, Type, TrendingUp, TrendingDown, 
+  Minus, Search, Calendar, ChevronRight, ArrowLeft, History as HistoryIcon 
+} from "lucide-react";
 import ScoreDisplay from "../components/analyzer/ScoreDisplay";
 import Layout from "../entities/Layout";
 
@@ -16,9 +19,7 @@ export default function History() {
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
 
-  useEffect(() => {
-    loadAnalyses();
-  }, []);
+  useEffect(() => { loadAnalyses(); }, []);
 
   const loadAnalyses = async () => {
     try {
@@ -33,42 +34,41 @@ export default function History() {
 
   const filteredAnalyses = useMemo(() => {
     if (!searchTerm) return analyses;
-    return analyses.filter((analysis) =>
-      (analysis.content || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (analysis.analysis_type || "").toLowerCase().includes(searchTerm.toLowerCase())
+    return analyses.filter((a) =>
+      (a.content || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (a.analysis_type || "").toLowerCase().includes(searchTerm.toLowerCase())
     );
   }, [analyses, searchTerm]);
 
+  const stats = useMemo(() => {
+    if (!analyses.length) return { avg: 0, count: 0 };
+    const sum = analyses.reduce((acc, curr) => acc + curr.overall_score, 0);
+    return { avg: Math.round(sum / analyses.length), count: analyses.length };
+  }, [analyses]);
+
   const getContentTypeIcon = (type) => {
+    const props = { className: "w-4 h-4 text-slate-400" };
     switch (type) {
-      case "text": return <Type className="w-4 h-4" />;
-      case "document": return <FileText className="w-4 h-4" />;
-      case "url": return <Link2 className="w-4 h-4" />;
-      default: return <FileText className="w-4 h-4" />;
+      case "text": return <Type {...props} />;
+      case "document": return <FileText {...props} />;
+      case "url": return <Link2 {...props} />;
+      default: return <FileText {...props} />;
     }
-  };
-
-  const getScoreColor = (score) => {
-    if (score >= 80) return "text-green-400";
-    if (score >= 60) return "text-yellow-400";
-    if (score >= 40) return "text-orange-400";
-    return "text-red-400";
-  };
-
-  const getScoreIcon = (score) => {
-    if (score >= 70) return <TrendingUp className="w-4 h-4" />;
-    if (score >= 40) return <Minus className="w-4 h-4" />;
-    return <TrendingDown className="w-4 h-4" />;
   };
 
   if (selectedAnalysis) {
     return (
       <Layout>
-        <div className="max-w-4xl mx-auto">
-          <div className="flex items-center gap-4 mb-8">
-            <Button onClick={() => setSelectedAnalysis(null)} className="bg-slate-800 border border-slate-700 text-white px-3 py-2">← Back</Button>
-            <h1 className="text-2xl font-bold">Analysis Details</h1>
-          </div>
+        <div className="max-w-4xl mx-auto py-8">
+          <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }}>
+            <Button 
+              variant="ghost" 
+              onClick={() => setSelectedAnalysis(null)} 
+              className="mb-6 text-slate-400 hover:text-white hover:bg-slate-800 transition-all gap-2"
+            >
+              <ArrowLeft className="w-4 h-4" /> Back to History
+            </Button>
+          </motion.div>
           <ScoreDisplay analysis={selectedAnalysis} />
         </div>
       </Layout>
@@ -77,66 +77,127 @@ export default function History() {
 
   return (
     <Layout>
-      <div>
-        <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="flex justify-between items-center mb-6">
+      <div className="max-w-6xl mx-auto py-8 px-4">
+        {/* Header & Stats Section */}
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 mb-10">
           <div>
-            <h1 className="text-3xl font-bold">Analysis History</h1>
-            <p className="text-slate-400">Review previous AI content analyses</p>
+            <div className="flex items-center gap-3 mb-2">
+              <div className="p-2 bg-blue-500/10 rounded-lg">
+                <HistoryIcon className="w-6 h-6 text-blue-400" />
+              </div>
+              <h1 className="text-4xl font-bold tracking-tight text-white">Analysis History</h1>
+            </div>
+            <p className="text-slate-400 text-lg">Track and manage your AI-generated insights.</p>
           </div>
-          <div className="w-full max-w-xs relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-            <Input value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} placeholder="Search analyses..." className="pl-10" />
-          </div>
-        </motion.div>
 
-        {isLoading ? (
-          <div className="grid gap-4">
-            {Array.from({ length: 4 }).map((_, i) => (
-              <Card key={i} className="bg-slate-800/40 border border-slate-700 p-4 animate-pulse">
-                <CardContent className="p-4">
-                  <div className="h-8 bg-slate-700 rounded mb-2"></div>
-                  <div className="h-4 bg-slate-700 rounded w-3/4"></div>
-                </CardContent>
-              </Card>
-            ))}
+          <div className="flex gap-4">
+            <div className="bg-slate-900/50 border border-slate-800 p-4 rounded-2xl min-w-[120px]">
+              <div className="text-xs font-bold text-slate-500 uppercase tracking-widest">Total</div>
+              <div className="text-2xl font-mono font-bold text-white">{stats.count}</div>
+            </div>
+            <div className="bg-slate-900/50 border border-slate-800 p-4 rounded-2xl min-w-[120px]">
+              <div className="text-xs font-bold text-slate-500 uppercase tracking-widest">Avg Score</div>
+              <div className={`text-2xl font-mono font-bold ${stats.avg >= 70 ? 'text-emerald-400' : 'text-amber-400'}`}>
+                {stats.avg}%
+              </div>
+            </div>
           </div>
-        ) : filteredAnalyses.length === 0 ? (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center py-16">
-            <div className="text-6xl mb-4">📊</div>
-            <h3 className="text-xl font-semibold text-slate-300 mb-2">{searchTerm ? "No Matching Analyses" : "No Analyses Yet"}</h3>
-            <p className="text-slate-500">{searchTerm ? "Try a different search term." : "Start analyzing content to build history."}</p>
-          </motion.div>
-        ) : (
-          <div className="grid gap-4">
-            {filteredAnalyses.map((analysis, index) => (
-              <motion.div key={analysis.id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: index * 0.03 }}>
-                <Card className="bg-slate-800/60 border border-slate-700 rounded-2xl cursor-pointer" onClick={() => setSelectedAnalysis(analysis)}>
-                  <CardContent className="p-4 flex justify-between items-center">
-                    <div className="flex items-center gap-4">
-                      <div className="flex items-center gap-2">
-                        {getContentTypeIcon(analysis.content_type)}
-                        <span className="text-white font-medium">
-                          {analysis.content_type === "document" ? analysis.content : (analysis.content?.length > 60 ? analysis.content.substring(0, 60) + "..." : analysis.content)}
-                        </span>
-                      </div>
-                      <Badge className="ml-3">{analysis.analysis_type}</Badge>
-                    </div>
+        </div>
 
-                    <div className="flex items-center gap-4">
-                      <div className="text-right">
-                        <div className={`text-2xl font-bold ${getScoreColor(analysis.overall_score)} flex items-center gap-1`}>
-                          {getScoreIcon(analysis.overall_score)} {analysis.overall_score}
+        {/* Search Bar */}
+        <div className="relative mb-8 max-w-md">
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500" />
+          <Input 
+            value={searchTerm} 
+            onChange={(e) => setSearchTerm(e.target.value)} 
+            placeholder="Search by content or type..." 
+            className="pl-12 h-12 bg-slate-900/40 border-slate-800 rounded-xl focus:ring-blue-500/20 focus:border-blue-500/50 transition-all"
+          />
+        </div>
+
+        {/* History List */}
+        <div className="space-y-3">
+          {isLoading ? (
+            <div className="space-y-4">
+              {[1, 2, 3].map((i) => (
+                <div key={i} className="h-24 bg-slate-800/20 border border-slate-800 animate-pulse rounded-2xl" />
+              ))}
+            </div>
+          ) : filteredAnalyses.length === 0 ? (
+            <div className="text-center py-20 border-2 border-dashed border-slate-800 rounded-3xl">
+              <div className="text-slate-600 mb-4 flex justify-center"><Search className="w-12 h-12" /></div>
+              <h3 className="text-xl font-medium text-slate-400">No results found</h3>
+            </div>
+          ) : (
+            <AnimatePresence>
+              {filteredAnalyses.map((analysis, index) => (
+                <motion.div
+                  key={analysis.id}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: index * 0.05 }}
+                  whileHover={{ scale: 1.005, x: 5 }}
+                  className="group"
+                >
+                  <Card 
+                    className="bg-slate-900/40 hover:bg-slate-800/40 border-slate-800 hover:border-slate-700 transition-all cursor-pointer rounded-2xl overflow-hidden"
+                    onClick={() => setSelectedAnalysis(analysis)}
+                  >
+                    <CardContent className="p-0">
+                      <div className="flex flex-col md:flex-row items-stretch md:items-center">
+                        {/* Score Indicator Column */}
+                        <div className={`w-2 md:w-1.5 self-stretch ${analysis.overall_score >= 80 ? 'bg-emerald-500' : analysis.overall_score >= 50 ? 'bg-amber-500' : 'bg-rose-500'}`} />
+                        
+                        <div className="flex-1 p-5 flex flex-col md:flex-row justify-between items-center gap-6">
+                          {/* Content Info */}
+                          <div className="flex items-start gap-4 flex-1 min-w-0">
+                            <div className="mt-1 p-2 bg-slate-800 rounded-lg group-hover:bg-slate-700 transition-colors">
+                              {getContentTypeIcon(analysis.content_type)}
+                            </div>
+                            <div className="min-w-0">
+                              <div className="flex items-center gap-2 mb-1">
+                                <span className="text-white font-semibold truncate text-lg">
+                                  {analysis.content_type === "document" ? analysis.content : analysis.content?.substring(0, 50)}
+                                </span>
+                                <Badge variant="secondary" className="bg-slate-800 text-slate-400 font-normal border-none">
+                                  {analysis.analysis_type}
+                                </Badge>
+                              </div>
+                              <div className="flex items-center gap-4 text-sm text-slate-500">
+                                <span className="flex items-center gap-1">
+                                  <Calendar className="w-3 h-3" />
+                                  {formatDistanceToNow(new Date(), { addSuffix: true })}
+                                </span>
+                                <span className="hidden md:inline truncate italic opacity-70">
+                                  {analysis.feedback?.substring(0, 80)}...
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Score & Action */}
+                          <div className="flex items-center gap-8 pl-4 border-l border-slate-800/50">
+                            <div className="text-right">
+                              <div className={`text-3xl font-black font-mono tracking-tighter ${
+                                analysis.overall_score >= 80 ? 'text-emerald-400' : analysis.overall_score >= 50 ? 'text-amber-400' : 'text-rose-400'
+                              }`}>
+                                {analysis.overall_score}<span className="text-xs text-slate-600 ml-0.5">%</span>
+                              </div>
+                              <div className="text-[10px] uppercase font-bold text-slate-500 tracking-tighter">Overall</div>
+                            </div>
+                            <div className="hidden md:flex items-center justify-center w-10 h-10 rounded-full bg-slate-800 group-hover:bg-blue-600 transition-all text-slate-400 group-hover:text-white">
+                              <ChevronRight className="w-5 h-5" />
+                            </div>
+                          </div>
                         </div>
-                        <div className="text-slate-400 text-sm">/ 100</div>
                       </div>
-                      <Button onClick={() => setSelectedAnalysis(analysis)} className="bg-slate-700 px-3 py-2">View</Button>
-                    </div>
-                  </CardContent>
-                </Card>
-              </motion.div>
-            ))}
-          </div>
-        )}
+                    </CardContent>
+                  </Card>
+                </motion.div>
+              ))}
+            </AnimatePresence>
+          )}
+        </div>
       </div>
     </Layout>
   );

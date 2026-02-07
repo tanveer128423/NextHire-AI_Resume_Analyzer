@@ -19,25 +19,21 @@ console.log(
   process.env.HF_API_KEY ? "✅ Found" : "❌ Missing",
 );
 
-// Uploads setup
-const UPLOAD_DIR = path.join(__dirname, "uploads");
-if (!fs.existsSync(UPLOAD_DIR)) fs.mkdirSync(UPLOAD_DIR);
-app.use("/uploads", express.static(UPLOAD_DIR));
-
 let analyses = [];
 
-// Multer setup
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => cb(null, UPLOAD_DIR),
-  filename: (req, file, cb) => cb(null, `${Date.now()}-${file.originalname}`),
-});
-const upload = multer({ storage });
+// Multer setup - use memory storage to avoid saving files to disk
+const upload = multer({ storage: multer.memoryStorage() });
 
-// Upload route
+// Upload route - Process file without saving to disk
 app.post("/api/upload", upload.single("file"), (req, res) => {
   if (!req.file) return res.status(400).json({ error: "No file uploaded" });
-  const fileUrl = `${req.protocol}://${req.get("host")}/uploads/${req.file.filename}`;
-  res.json({ file_url: fileUrl });
+  // Return file info without storing on disk - just acknowledge the file for analysis
+  const fileUrl = `${req.protocol}://${req.get("host")}/api/file/${req.file.filename}`;
+  res.json({
+    file_url: fileUrl,
+    filename: req.file.originalname,
+    mimetype: req.file.mimetype,
+  });
 });
 
 // Dummy extract route
@@ -99,14 +95,13 @@ async function analyzeText(prompt) {
 }
 
 // OpenAI - image analysis
-async function analyzeImage(filePath) {
+async function analyzeImage(imageBuffer) {
   if (!openai) {
     throw new Error(
       "OpenAI API key not configured. Please set OPENAI_API_KEY in .env",
     );
   }
   try {
-    const imageBuffer = fs.readFileSync(filePath);
     const base64Image = imageBuffer.toString("base64");
 
     const response = await openai.chat.completions.create({
@@ -165,8 +160,8 @@ app.post("/api/invoke-llm", upload.single("file"), async (req, res) => {
     let overall_score, detailed_scores, recommendations, feedback;
 
     if (req.file) {
-      // Image analysis
-      const result = await analyzeImage(req.file.path);
+      // Image analysis - use buffer from memory
+      const result = await analyzeImage(req.file.buffer);
 
       overall_score = result.overall;
       detailed_scores = {

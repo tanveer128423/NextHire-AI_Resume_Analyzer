@@ -119,8 +119,10 @@ export default function Dashboard() {
         sentiment: "Perform a sentiment analysis of this content...",
         clarity: "Evaluate the clarity and readability of this content...",
         professionalism: "Assess the professionalism of this content...",
-        creativity: "Evaluate the creativity and originality of this content...",
-        technical: "Analyze the technical accuracy and depth of this content...",
+        creativity:
+          "Evaluate the creativity and originality of this content...",
+        technical:
+          "Analyze the technical accuracy and depth of this content...",
       };
 
       const prompt = `${analysisPrompts[inputData.analysis_type]}
@@ -148,7 +150,7 @@ Provide a comprehensive analysis with:
 
       const feedbackStr = aiResponse.feedback?.label
         ? `${aiResponse.feedback.label} (score: ${Math.round(
-            aiResponse.feedback.score * 100
+            aiResponse.feedback.score * 100,
           )}%)`
         : JSON.stringify(aiResponse.feedback);
 
@@ -169,9 +171,7 @@ Provide a comprehensive analysis with:
       };
 
       setCurrentAnalysis(analysisData);
-      await Analysis.create(analysisData).catch((err) =>
-        console.warn("Failed to save analysis:", err)
-      );
+      // Analysis is already saved on the backend via /api/invoke-llm
     } catch (error) {
       console.error("Analysis error:", error);
     } finally {
@@ -191,7 +191,7 @@ Provide a comprehensive analysis with:
           <h1 className="text-5xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-red-400 to-blue-400">
             Next Hire
           </h1>
-          <p className="text-slate-400 mt-2 ">
+          <p className="text-slate-600 dark:text-slate-400 mt-2 ">
             Get detailed AI-powered insights for your content
           </p>
         </motion.div>
@@ -215,7 +215,7 @@ Provide a comprehensive analysis with:
                     <div className="absolute inset-0 border-4 border-blue-500/20 rounded-full"></div>
                     <div className="absolute inset-0 border-4 border-t-blue-500 rounded-full animate-spin"></div>
                   </div>
-                  <h3 className="text-xl font-semibold text-white mb-4">
+                  <h3 className="text-xl font-semibold text-slate-100 dark:text-white mb-4">
                     Analyzing Content...
                   </h3>
                   <motion.p
